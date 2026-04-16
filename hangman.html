@@ -160,13 +160,14 @@ let secretWord = "";
 let displayWord = [];
 let points = 0;
 let msgTimer = null;
+let gameOver = false;
 
 const words = {
   4: ["haus","baum","tür","ofen","wolf","käse","maus","boot","zahn"],
   5: ["äpfel","blume","stuhl","wolke","hütte","kiste","zange","tisch"],
-  6: ["fenster","garten","könige","würfel","straße","hunger","koffer"],
+  6: ["fenster","garten","würfel","straße","hunger","koffer","könige"],
   7: ["schrank","flasche","brötchen","königin","schlüssel","drache"],
-  8: ["schreiben","flughafen","kaktusöl","königreich","schmiede"]
+  8: ["schreiben","flughafen","schmiede","königreich","kaktusöl"]
 };
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzäöü";
@@ -187,6 +188,8 @@ document.getElementById("startBtn").addEventListener("click", () => {
 });
 
 function startGame() {
+  gameOver = false;
+
   points = getStartPoints(chosenLength);
   document.getElementById("points").textContent = "Punkte: " + points;
 
@@ -226,8 +229,17 @@ function renderAlphabet() {
   });
 }
 
+function disableAllButtons() {
+  document.querySelectorAll(".letterBtn").forEach(btn => {
+    btn.classList.add("used");
+    btn.style.pointerEvents = "none";
+  });
+}
+
 function guess(letter, btn) {
+  if (gameOver) return;
   if (btn.classList.contains("used")) return;
+
   btn.classList.add("used");
 
   let found = false;
@@ -247,7 +259,13 @@ function guess(letter, btn) {
     showMsg("Treffer! Position(en): " + positions.join(", "));
   } else {
     btn.classList.add("wrong");
-    points -= 2;
+
+    if (points === 1) {
+      points -= 1;
+    } else {
+      points -= 2;
+    }
+
     showMsg("Leider falsch!");
   }
 
@@ -255,10 +273,16 @@ function guess(letter, btn) {
   renderWord();
 
   if (displayWord.join("") === secretWord) {
+    gameOver = true;
+    disableAllButtons();
     showMsg("Gewonnen! Das Wort war: " + secretWord);
   }
 
   if (points <= 0) {
+    points = 0;
+    document.getElementById("points").textContent = "Punkte: 0";
+    gameOver = true;
+    disableAllButtons();
     showMsg("Verloren! Das Wort war: " + secretWord);
   }
 }
