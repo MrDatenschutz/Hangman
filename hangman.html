@@ -88,15 +88,28 @@
     cursor: pointer;
     font-size: 1rem;
     color: #e5e7eb;
+    transition: 0.15s;
   }
   .letterBtn:hover {
     background: #38bdf8;
     color: #000;
   }
   .letterBtn.used {
-    background: #4b5563;
-    color: #1e293b;
     cursor: default;
+  }
+
+  .letterBtn.correct {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+    color: #000 !important;
+    box-shadow: 0 0 12px #22c55e;
+  }
+
+  .letterBtn.wrong {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #000 !important;
+    box-shadow: 0 0 12px #ef4444;
   }
 
   #points {
@@ -106,30 +119,14 @@
     color: #38bdf8;
   }
 
-  #popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #1e293b;
-    border: 2px solid #38bdf8;
-    padding: 20px;
-    border-radius: 10px;
-    display: none;
-    color: #e5e7eb;
+  #msg {
     text-align: center;
-    box-shadow: 0 0 20px rgba(56,189,248,0.4);
-  }
-
-  #popup button {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #38bdf8;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #000;
-    font-weight: bold;
+    margin-top: 8px;
+    font-size: 1.1rem;
+    min-height: 24px;
+    color: #e5e7eb;
+    opacity: 0;
+    transition: opacity 0.2s;
   }
 </style>
 </head>
@@ -154,11 +151,7 @@
   <div id="alphabet"></div>
 
   <div id="points">Punkte: 20</div>
-</div>
-
-<div id="popup">
-  <div id="popupText"></div>
-  <button onclick="closePopup()">OK</button>
+  <div id="msg"></div>
 </div>
 
 <script>
@@ -166,6 +159,7 @@ let chosenLength = null;
 let secretWord = "";
 let displayWord = [];
 let points = 20;
+let msgTimer = null;
 
 const words = {
   4: ["haus","baum","tür","ofen","wolf","käse","maus","boot","zahn"],
@@ -180,13 +174,13 @@ const alphabet = "abcdefghijklmnopqrstuvwxyzäöü";
 document.querySelectorAll(".lenBtn").forEach(btn => {
   btn.addEventListener("click", () => {
     chosenLength = parseInt(btn.dataset.len);
-    popup("Wortlänge " + chosenLength + " gewählt.");
+    showMsg("Wortlänge " + chosenLength + " gewählt.");
   });
 });
 
 document.getElementById("startBtn").addEventListener("click", () => {
   if (!chosenLength) {
-    popup("Bitte zuerst eine Wortlänge wählen!");
+    showMsg("Bitte zuerst eine Wortlänge wählen!");
     return;
   }
   startGame();
@@ -203,6 +197,7 @@ function startGame() {
 
   renderWord();
   renderAlphabet();
+  showMsg("Spiel gestartet!");
 }
 
 function renderWord() {
@@ -238,31 +233,37 @@ function guess(letter, btn) {
   }
 
   if (found) {
-    popup("Treffer! Position(en): " + positions.join(", "));
+    btn.classList.add("correct");
+    showMsg("Treffer! Position(en): " + positions.join(", "));
   } else {
+    btn.classList.add("wrong");
     points--;
     document.getElementById("points").textContent = "Punkte: " + points;
-    popup("Leider falsch!");
+    showMsg("Leider falsch!");
   }
 
   renderWord();
 
   if (displayWord.join("") === secretWord) {
-    popup("Gewonnen! Das Wort war: " + secretWord);
+    showMsg("Gewonnen! Das Wort war: " + secretWord);
   }
 
   if (points <= 0) {
-    popup("Verloren! Das Wort war: " + secretWord);
+    showMsg("Verloren! Das Wort war: " + secretWord);
   }
 }
 
-function popup(text) {
-  document.getElementById("popupText").textContent = text;
-  document.getElementById("popup").style.display = "block";
-}
+function showMsg(text) {
+  const msg = document.getElementById("msg");
 
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
+  if (msgTimer) clearTimeout(msgTimer);
+
+  msg.textContent = text;
+  msg.style.opacity = 1;
+
+  msgTimer = setTimeout(() => {
+    msg.style.opacity = 0;
+  }, 2000);
 }
 </script>
 
